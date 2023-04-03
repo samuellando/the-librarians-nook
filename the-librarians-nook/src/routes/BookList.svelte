@@ -1,36 +1,141 @@
 <script lang="ts">
-	let books = [
-		{
-			image:
-				'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1170803558l/72193.jpg',
-			title: 'Harry Potter and the Philosopher’s Stone',
-			goodReads:
-				'https://www.goodreads.com/book/show/72193.Harry_Potter_and_the_Philosopher_s_Stone?from_search=true&from_srp=true&qid=vHgcnNSuGC&rank=1',
-			ownership: {
-				sam: 'Free on kindle with amazon prime',
-				merry: 'Owns it'
-			},
-			status: 'Suggested',
-			notes: {
-				merry: 'this is a test',
-				sam: 'this is a test 2'
-			}
-		},
-		{
-			image:
-				'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1574199214i/52767659.jpg',
-			title: 'The End of Everything',
-			goodReads:
-				'https://www.goodreads.com/book/show/52767659-the-end-of-everything?ref=nav_sb_ss_1_21',
-			ownership: {
-				sam: 'Will buy on kindle',
-				merry: "Can borrow Fabio's copy"
-			},
-			status: 'Suggested',
-			notes: {
-				merry: 'this is a test',
-				sam: 'this is a test 2'
+	import { onMount } from 'svelte';
+
+	interface book {
+		[key: string]: string | null;
+		id: string | null;
+		goodReads: string;
+		image: string;
+		status: string;
+		title: string;
+	}
+
+	let books: book[] = [];
+
+	function loadBooks() {
+		fetch('http://localhost:8080/books')
+			.then((response) => response.json())
+			.then((data) => {
+				books = data;
+			})
+			.catch((error) => {
+				console.log(error);
+				return [];
+			});
+	}
+
+	onMount(async () => {
+		loadBooks();
+	});
+
+	let adding = false;
+
+	async function add(e: SubmitEvent) {
+		let form;
+		if (e.target instanceof HTMLFormElement) {
+			form = new FormData(e.target);
+		} else {
+			return;
+		}
+		let b: book = {
+			id: null,
+			title: '',
+			image: '',
+			status: 'suggested',
+			goodReads: ''
+		};
+		for (let field of form) {
+			const [key, value] = field;
+			if (!(value instanceof File)) {
+				b[key.toString()] = value;
+			} else {
+				return;
 			}
 		}
-	];
+
+		await fetch('http://localhost:8080/books', {
+			method: 'POST',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(b)
+		});
+		loadBooks();
+		adding = false;
+	}
+
+	function update(b: book) {
+		fetch('http://localhost:8080/books/' + b.id, {
+			method: 'PATCH',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(b)
+		});
+	}
 </script>
+
+<h1>Book List</h1>
+<div class="list">
+	{#each books as book}
+		<div class="book">
+			<img src={book.image} alt="{book.title} cover" />
+			<h2>{book.title}</h2>
+			<p><a href={book.goodReads}>good reads</a></p>
+			<select bind:value={book.status} on:change={() => update(book)}>
+				<option value="suggested">suggested</option>
+				<option value="will read">will read</option>
+				<option value="reading">reading</option>
+				<option value="read">done</option>
+			</select>
+		</div>
+	{/each}
+	{#if adding}
+		<form id="add" on:submit|preventDefault={add}>
+			<label>
+				title
+				<input name="title" type="text" />
+			</label><br />
+			<label
+				>image link
+				<input name="image" type="text" />
+			</label><br />
+			<label
+				>goo reads link
+				<input name="gooreads" type="text" />
+			</label><br />
+			<input type="submit" />
+		</form>
+	{:else}
+		<br />
+		<button id="add" on:click={() => (adding = true)}>add</button>
+	{/if}
+</div>
+
+<style>
+	#add {
+		margin-top: 20px;
+	}
+	h1 {
+		text-align: center;
+	}
+	img {
+		height: 200px;
+	}
+	.list {
+		text-align: center;
+	}
+	.book {
+		background-color: red;
+		display: inline-block;
+		width: 51vw;
+		margin-top: 2vh;
+		padding: 10px;
+	}
+	.book img {
+		margin: 10px;
+		float: left;
+	}
+</style>
