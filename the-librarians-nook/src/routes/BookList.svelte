@@ -5,9 +5,9 @@
 		[key: string]: string | null;
 		id: string | null;
 		goodReads: string;
-		image: string;
-		status: string;
-		title: string;
+		image: string | null;
+		status: string | null;
+		title: string | null;
 	}
 
 	let books: book[] = [];
@@ -39,9 +39,9 @@
 		}
 		let b: book = {
 			id: null,
-			title: '',
-			image: '',
-			status: 'suggested',
+			title: null,
+			image: null,
+			status: null,
 			goodReads: ''
 		};
 		for (let field of form) {
@@ -94,17 +94,9 @@
 	{/each}
 	{#if adding}
 		<form id="add" on:submit|preventDefault={add}>
-			<label>
-				title
-				<input name="title" type="text" />
-			</label><br />
 			<label
-				>image link
-				<input name="image" type="text" />
-			</label><br />
-			<label
-				>goo reads link
-				<input name="gooreads" type="text" />
+				>good reads link
+				<input name="goodReads" type="text" />
 			</label><br />
 			<input type="submit" />
 		</form>

@@ -1,6 +1,14 @@
 from flask import Flask, request
 from flask_cors import cross_origin
 import json
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+
 
 app = Flask(__name__)
 
@@ -36,7 +44,28 @@ def get_books():
 def post_book():
     global books
     book = json.loads(request.data)
-    book["id"] = len(book)
+    url = book["goodReads"]
+    book["id"] = len(books)
+
+    browser = webdriver.Chrome(ChromeDriverManager().install())
+    browser.get(url)
+    timeout = 5
+    try:
+        element_present = EC.presence_of_element_located((By.CLASS_NAME, 'BookCover__image'))
+        WebDriverWait(browser, timeout).until(element_present)
+        element_present = EC.presence_of_element_located((By.CLASS_NAME, 'Text__title1'))
+        WebDriverWait(browser, timeout).until(element_present)
+    except TimeoutException:
+        print("Timed out waiting for page to load")
+    
+    soup = BeautifulSoup(browser.page_source,  'html.parser')
+    title = soup.find_all("h1")[0]
+    image = soup.find_all("div", {"class": "BookCover__image"})[0].find_all("img")[0]
+
+    book["title"] = title.contents[0]
+    book["image"] = image["src"]
+    book["status"] = "suggested"
+
     books.append(book)
     return book;
 
