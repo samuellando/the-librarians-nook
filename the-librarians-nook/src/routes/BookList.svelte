@@ -75,6 +75,17 @@
 			body: JSON.stringify(b)
 		});
 	}
+
+	function del(b: book) {
+		books = books.filter((book) => book.id != b.id);
+		fetch('http://localhost:8080/books/' + b.id, {
+			method: 'DELETE',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json'
+			}
+		});
+	}
 </script>
 
 <h1>Book List</h1>
@@ -90,6 +101,7 @@
 				<option value="reading">reading</option>
 				<option value="read">done</option>
 			</select>
+			<button on:click={() => del(book)}>remove</button>
 		</div>
 	{/each}
 	{#if adding}

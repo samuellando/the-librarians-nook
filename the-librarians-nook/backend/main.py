@@ -45,7 +45,7 @@ def post_book():
     global books
     book = json.loads(request.data)
     url = book["goodReads"]
-    book["id"] = len(books)
+    book["id"] = str(len(books))
 
     browser = webdriver.Chrome(ChromeDriverManager().install())
     browser.get(url)
@@ -78,6 +78,14 @@ def patch_book(id):
             return {"id": id, "result": 200};
     return {"result": 400}
 
+@app.route('/books/<id>', methods=["DELETE"])
+@cross_origin()
+def remove_book(id):
+    for i, book in enumerate(books):
+        if book["id"] == id:
+            del books[i]
+            return {"id": id, "result": 200};
+    return {"result": 400}
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)
