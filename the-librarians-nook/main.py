@@ -11,6 +11,7 @@ from selenium.webdriver.common.by import By
 import firebase_admin
 from firebase_admin import firestore
 
+
 import os
 os.environ['GRPC_DNS_RESOLVER'] = 'native'
 
@@ -66,6 +67,8 @@ def post_book():
 
     book["id"] = doc[1].id
 
+    print(book)
+
     return book;
 
 @app.route('/books/<id>', methods=["PATCH"])
@@ -93,4 +96,6 @@ def frontend(path):
     return send_from_directory("build", path)
 
 if __name__ == '__main__':
+    from flask_cors import CORS
+    CORS(app)
     app.run(host='127.0.0.1', port=8080, debug=True)

@@ -63,10 +63,17 @@
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify(b)
-		});
-		loadBooks();
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				books = [...books, data];
+			})
+			.catch((error) => {
+				console.log(error);
+				return [];
+			});
+
 		loading = false;
-		filter = 'suggested';
 		adding = false;
 	}
 
