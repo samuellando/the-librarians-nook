@@ -1,5 +1,4 @@
 from flask import Flask, request
-from flask_cors import cross_origin
 import json
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -20,7 +19,6 @@ db = firestore.client()
 app = Flask(__name__)
 
 @app.route('/books', methods=["GET"])
-@cross_origin()
 def get_books():
     books = []
     books_ref = db.collection(u'books')
@@ -33,7 +31,6 @@ def get_books():
     return books;
 
 @app.route('/books', methods=["POST"])
-@cross_origin()
 def post_book():
     book = json.loads(request.data)
     url = book["goodReads"]
@@ -65,7 +62,6 @@ def post_book():
     return book;
 
 @app.route('/books/<id>', methods=["PATCH"])
-@cross_origin()
 def patch_book(id):
     books_ref = db.collection(u'books')
     doc = books_ref.document(id)
@@ -74,7 +70,6 @@ def patch_book(id):
     return {"result": 200}
 
 @app.route('/books/<id>', methods=["DELETE"])
-@cross_origin()
 def remove_book(id):
     books_ref = db.collection(u'books')
     doc = books_ref.document(id)

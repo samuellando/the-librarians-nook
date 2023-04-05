@@ -1,4 +1,5 @@
 <script lang="ts">
+	let url = window.location.origin;
 	import { onMount } from 'svelte';
 
 	interface book {
@@ -13,7 +14,7 @@
 	let books: book[] = [];
 
 	function loadBooks() {
-		fetch('http://localhost:8080/books')
+		fetch(url + '/books')
 			.then((response) => response.json())
 			.then((data) => {
 				books = data;
@@ -26,11 +27,13 @@
 
 	onMount(async () => {
 		loadBooks();
+		loading = false;
 	});
 
 	let adding = false;
 
 	async function add(e: SubmitEvent) {
+		loading = true;
 		let form;
 		if (e.target instanceof HTMLFormElement) {
 			form = new FormData(e.target);
@@ -53,7 +56,7 @@
 			}
 		}
 
-		await fetch('http://localhost:8080/books', {
+		await fetch(url + '/books', {
 			method: 'POST',
 			headers: {
 				Accept: 'application/json',
@@ -62,11 +65,13 @@
 			body: JSON.stringify(b)
 		});
 		loadBooks();
+		loading = false;
+		filter = 'suggested';
 		adding = false;
 	}
 
 	function update(b: book) {
-		fetch('http://localhost:8080/books/' + b.id, {
+		fetch(url + '/books/' + b.id, {
 			method: 'PATCH',
 			headers: {
 				Accept: 'application/json',
@@ -78,7 +83,7 @@
 
 	function del(b: book) {
 		books = books.filter((book) => book.id != b.id);
-		fetch('http://localhost:8080/books/' + b.id, {
+		fetch(url + '/books/' + b.id, {
 			method: 'DELETE',
 			headers: {
 				Accept: 'application/json',
@@ -86,11 +91,35 @@
 			}
 		});
 	}
+
+	let filter = 'none';
+	let fbooks: book[] = [];
+	$: {
+		fbooks = books;
+		if (filter != 'none') {
+			fbooks = books.filter((book) => book.status == filter);
+		}
+	}
+	let loading = true;
 </script>
 
 <h1>Book List</h1>
+{#if loading}
+	<div class="loader-container">
+		<div class="loader" />
+	</div>
+{/if}
 <div class="list">
-	{#each books as book}
+	Filter:
+	<select id="filter" bind:value={filter}>
+		<option value="none">none</option>
+		<option value="suggested">suggested</option>
+		<option value="will read">will read</option>
+		<option value="reading">reading</option>
+		<option value="read">done</option>
+	</select>
+	<br />
+	{#each fbooks as book}
 		<div class="book">
 			<img src={book.image} alt="{book.title} cover" />
 			<h2>{book.title}</h2>
@@ -105,9 +134,9 @@
 		</div>
 	{/each}
 	{#if adding}
-		<form id="add" on:submit|preventDefault={add}>
+		<form on:submit|preventDefault={add}>
 			<label
-				>good reads link
+				>GoodReads link<br /><br />
 				<input name="goodReads" type="text" />
 			</label><br />
 			<input type="submit" />
@@ -120,7 +149,12 @@
 
 <style>
 	#add {
+		background-color: #cc00ff65;
+		border-radius: 10px;
+		border: none;
+		padding: 10px;
 		margin-top: 20px;
+		margin-bottom: 200px;
 	}
 	h1 {
 		text-align: center;
@@ -131,8 +165,39 @@
 	.list {
 		text-align: center;
 	}
+	form {
+		background-color: #cc00ff65;
+		border-radius: 25px;
+		display: inline-block;
+		width: 51vw;
+		margin-top: 2vh;
+		padding: 20px;
+		margin-bottom: 200px;
+	}
+	input {
+		margin-bottom: 20px;
+	}
+	button {
+		background-color: #ccffff;
+		border-radius: 10px;
+		border: none;
+		padding: 10px;
+	}
+	input {
+		background-color: #ccffff;
+		border-radius: 10px;
+		border: none;
+		padding: 10px;
+	}
+	select {
+		background-color: #ccffff;
+		border-radius: 10px;
+		border: none;
+		padding: 10px;
+	}
 	.book {
-		background-color: red;
+		background-color: #cc00ff65;
+		border-radius: 25px;
 		display: inline-block;
 		width: 51vw;
 		margin-top: 2vh;
@@ -141,5 +206,43 @@
 	.book img {
 		margin: 10px;
 		float: left;
+	}
+	@media only screen and (max-width: 600px) {
+		.book img {
+			float: none;
+		}
+	}
+	#filter {
+		background-color: #cc00ff65;
+	}
+
+	.loader-container {
+		background-color: #cc00ff35;
+		position: fixed;
+		width: 100vw;
+		height: 100vh;
+		top: 0;
+		left: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		text-align: center;
+	}
+	.loader {
+		border: 16px solid #ccffff; /* Light grey */
+		border-top: 16px solid #cc00ff; /* Blue */
+		border-radius: 50%;
+		width: 120px;
+		height: 120px;
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 </style>
