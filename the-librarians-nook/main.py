@@ -1,10 +1,11 @@
 from flask import Flask, request
+from flask import send_from_directory
 import json
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
+import chromedriver_binary
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import firebase_admin
@@ -35,7 +36,13 @@ def post_book():
     book = json.loads(request.data)
     url = book["goodReads"]
 
-    browser = webdriver.Chrome(ChromeDriverManager().install())
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("window-size=1024,768")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    browser = webdriver.Chrome(chrome_options=chrome_options)
     browser.get(url)
     timeout = 5
     try:
@@ -75,6 +82,15 @@ def remove_book(id):
     doc = books_ref.document(id)
     doc.delete()
     return {"result": 200}
+
+
+@app.route('/')
+def index():
+    return send_from_directory("build", "index.html")
+
+@app.route('/<path:path>')
+def frontend(path):
+    return send_from_directory("build", path)
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)

@@ -4,3 +4,4 @@ beautifulsoup4
 selenium
 webdriver_manager
 firebase-admin
+chromedriver-binary-auto
