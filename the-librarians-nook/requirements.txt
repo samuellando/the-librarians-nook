@@ -5,3 +5,4 @@ selenium
 webdriver_manager
 firebase-admin
 chromedriver-binary-auto
+git+https://github.com/samuellando/anyREST

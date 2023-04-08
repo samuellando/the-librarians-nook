@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import firebase_admin
 from firebase_admin import firestore
-
+import anyrest
 
 import os
 os.environ['GRPC_DNS_RESOLVER'] = 'native'
@@ -19,18 +19,17 @@ firebase_app = firebase_admin.initialize_app()
 db = firestore.client()
 
 app = Flask(__name__)
+anyrest.addAnyrestHandlers(app, db)
 
 @app.route('/books', methods=["GET"])
 def get_books():
-    books = []
-    books_ref = db.collection(u'books')
-    docs = books_ref.stream()
-    for doc in docs:
-        book = doc.to_dict()
-        book["id"] = doc.id
-        books.append(book)
+    books = anyrest.anyrest_get(db, "books")
+    r = []
+    for id, book in books.items():
+        book["id"] = id
+        r.append(book)
         
-    return books;
+    return r;
 
 @app.route('/books', methods=["POST"])
 def post_book():
@@ -67,25 +66,15 @@ def post_book():
 
     book["id"] = doc[1].id
 
-    print(book)
-
     return book;
 
 @app.route('/books/<id>', methods=["PATCH"])
 def patch_book(id):
-    books_ref = db.collection(u'books')
-    doc = books_ref.document(id)
-    book = json.loads(request.data)
-    doc.set(book)
-    return {"result": 200}
+    return anyrest.anyrest_patch(db, "books/"+id)
 
 @app.route('/books/<id>', methods=["DELETE"])
 def remove_book(id):
-    books_ref = db.collection(u'books')
-    doc = books_ref.document(id)
-    doc.delete()
-    return {"result": 200}
-
+    return anyrest.anyrest_delete(db, "books/"+id)
 
 @app.route('/')
 def index():

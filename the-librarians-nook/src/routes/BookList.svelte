@@ -1,5 +1,6 @@
 <script lang="ts">
 	let url = window.location.origin;
+	//let url = 'http://localhost:8080';
 	import { onMount } from 'svelte';
 
 	interface book {
